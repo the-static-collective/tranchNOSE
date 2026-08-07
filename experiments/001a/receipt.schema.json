@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/the-static-collective/tranchNOSE/experiments/001a/receipt.schema.json",
+  "title": "TranchNOSE Experiment 001A Receipt v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "identity",
+    "randomness",
+    "condition",
+    "inputs",
+    "interventions",
+    "observations",
+    "coordination_audit",
+    "causal_attribution",
+    "failure"
+  ],
+  "properties": {
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "experiment", "implementation", "run_id", "receipt_digest"],
+      "properties": {
+        "schema_version": {"const": "tranchNOSE.experiment-001a.receipt.v0.1"},
+        "experiment": {"const": "001A"},
+        "implementation": {"type": "string", "minLength": 1},
+        "run_id": {"$ref": "#/$defs/sha256"},
+        "receipt_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "randomness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "streams"],
+      "properties": {
+        "algorithm": {"type": "string", "minLength": 1},
+        "streams": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "seed"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1},
+              "seed": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    },
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "field_recurrence", "electronic_reconstruction", "permitted_coordination_classes", "coordination_ceiling_bits"],
+      "properties": {
+        "label": {"enum": ["A", "B", "C"]},
+        "field_recurrence": {"type": "boolean"},
+        "electronic_reconstruction": {"type": "boolean"},
+        "permitted_coordination_classes": {
+          "type": "array",
+          "items": {"enum": ["clock_reference", "health_telemetry", "slow_coupling_setting", "topology_reconfiguration"]},
+          "uniqueItems": true
+        },
+        "coordination_ceiling_bits": {"type": "integer", "minimum": 0}
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "candidate_attractors", "initial_field", "initial_electronic_state", "field_topology", "local_topology", "nonlinearity", "stimulus", "termination"],
+      "properties": {
+        "target": {"enum": ["F_A", "F_B", "F_C", "F_D"]},
+        "candidate_attractors": {"$ref": "#/$defs/address"},
+        "initial_field": {"$ref": "#/$defs/address"},
+        "initial_electronic_state": {"$ref": "#/$defs/address"},
+        "field_topology": {"$ref": "#/$defs/address"},
+        "local_topology": {"$ref": "#/$defs/address"},
+        "nonlinearity": {"$ref": "#/$defs/address"},
+        "stimulus": {"$ref": "#/$defs/address"},
+        "termination": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["max_steps", "recognition_threshold"],
+          "properties": {
+            "max_steps": {"type": "integer", "minimum": 1},
+            "recognition_threshold": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        }
+      }
+    },
+    "interventions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step", "order", "type", "parameters"],
+        "properties": {
+          "step": {"type": "integer", "minimum": 0},
+          "order": {"type": "integer", "minimum": 0},
+          "type": {"enum": ["phase_corrupt", "node_remove", "field_scrub", "electronic_scrub", "trace_replay", "trace_shuffle", "time_permute", "state_swap", "topology_swap", "noise_inject"]},
+          "parameters": {"type": "object"}
+        }
+      }
+    },
+    "observations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["final_overlap", "winning_basin", "converged", "convergence_step", "final_field_digest", "final_electronic_state_digest", "final_topology_digest"],
+      "properties": {
+        "final_overlap": {"$ref": "#/$defs/overlapVector"},
+        "winning_basin": {"type": ["string", "null"], "enum": ["F_A", "F_B", "F_C", "F_D", null]},
+        "converged": {"type": "boolean"},
+        "convergence_step": {"type": ["integer", "null"], "minimum": 0},
+        "attractor_lifetime_steps": {"type": ["integer", "null"], "minimum": 0},
+        "final_field_digest": {"$ref": "#/$defs/sha256"},
+        "final_electronic_state_digest": {"$ref": "#/$defs/sha256"},
+        "final_topology_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "coordination_audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transcript_digest", "message_count", "total_bits", "ceiling_compliant", "leakage_decoder", "causal_trace_controls"],
+      "properties": {
+        "transcript_digest": {"$ref": "#/$defs/sha256"},
+        "message_count": {"type": "integer", "minimum": 0},
+        "total_bits": {"type": "integer", "minimum": 0},
+        "ceiling_compliant": {"type": "boolean"},
+        "leakage_decoder": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["evaluated", "accuracy", "confidence"],
+          "properties": {
+            "evaluated": {"type": "boolean"},
+            "accuracy": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+            "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+          }
+        },
+        "causal_trace_controls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["control", "source_run_id", "imposed_basin"],
+            "properties": {
+              "control": {"enum": ["same_basin_replay", "cross_basin_replay", "shuffled", "time_permuted", "field_blind", "field_conditioned"]},
+              "source_run_id": {"type": ["string", "null"]},
+              "imposed_basin": {"type": ["string", "null"], "enum": ["F_A", "F_B", "F_C", "F_D", null]}
+            }
+          }
+        }
+      }
+    },
+    "causal_attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ablation_matrix", "state_swap_controls", "attribution"],
+      "properties": {
+        "ablation_matrix": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["A", "B", "C", "D", "delta_field", "delta_electronic", "interaction"],
+          "properties": {
+            "A": {"type": ["number", "null"]},
+            "B": {"type": ["number", "null"]},
+            "C": {"type": ["number", "null"]},
+            "D": {"type": ["number", "null"]},
+            "delta_field": {"type": ["number", "null"]},
+            "delta_electronic": {"type": ["number", "null"]},
+            "interaction": {"type": ["number", "null"]}
+          }
+        },
+        "state_swap_controls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "result"],
+            "properties": {
+              "type": {"enum": ["field_swap", "electronic_state_swap", "coordination_trace_swap", "topology_swap", "inconsistent_history"]},
+              "result": {"enum": ["followed_field", "followed_electronic_state", "followed_coordination_trace", "followed_topology", "no_basin", "unresolved"]}
+            }
+          }
+        },
+        "attribution": {"enum": ["field-supported", "electronic-supported", "topology-supported", "relational", "unresolved"]}
+      }
+    },
+    "failure": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["class", "terminal_step", "evidence"],
+          "properties": {
+            "class": {"enum": ["insufficient_recurrence", "nonlinearity_not_useful", "snr_below_floor", "phase_drift", "basins_not_separated", "unstable_loop_gain", "oeo_latency_instability", "quantization_instability", "representation_unsuitable", "measurement_inadequate", "coordination_budget_exceeded", "electronic_reconstruction_detected", "target_identity_leakage", "did_not_converge_unresolved"]},
+            "terminal_step": {"type": "integer", "minimum": 0},
+            "evidence": {"type": "object"}
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "address": {"type": "string", "minLength": 1},
+    "overlapVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["F_A", "F_B", "F_C", "F_D"],
+      "properties": {
+        "F_A": {"type": "number", "minimum": 0, "maximum": 1},
+        "F_B": {"type": "number", "minimum": 0, "maximum": 1},
+        "F_C": {"type": "number", "minimum": 0, "maximum": 1},
+        "F_D": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    }
+  }
+}
