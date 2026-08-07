@@ -1,32 +1,44 @@
 {
   "schema_version": "tranchNOSE.experiment-001a.receipt.v0.1",
   "experiment": "001A",
-  "implementation": "synthetic-harness-py-v0.1",
+  "implementation": "field-dynamics-py-v0.1",
   "randomness": {
     "algorithm": "sha256-counter-v1",
     "streams": [
-      {"name": "interventions", "seed": "001a-interventions-seed"},
-      {"name": "coordination", "seed": "001a-coordination-seed"}
+      {
+        "name": "interventions",
+        "seed": "001a-interventions-seed"
+      },
+      {
+        "name": "coordination",
+        "seed": "001a-coordination-seed"
+      }
     ]
   },
   "condition": {
-    "label": "A",
+    "label": "B",
     "field_recurrence": true,
     "electronic_reconstruction": false,
-    "permitted_coordination_classes": ["clock_reference", "health_telemetry"],
+    "permitted_coordination_classes": [
+      "clock_reference",
+      "health_telemetry"
+    ],
     "coordination_ceiling_bits": 4096
   },
   "inputs": {
     "target": "F_A",
-    "candidate_attractors": "sha256:2e5f6a9104d0b3e4f1164f18cc3e0f6fb195214388238229ffe78d4abb751c43",
-    "initial_field": "sha256:6e8e078320f1817bf1a0c43c8461e58d886f0cfcc1615c94e9457921f7c3466f",
-    "initial_electronic_state": "sha256:d6e5adcbf30ad005be6323dc9f90b70a49e81df22cb53f4a0f11518bb7989607",
-    "field_topology": "sha256:b018862987ac39a773c0d7043734da322b92d8d975010f150475fe53b80ec82a",
-    "local_topology": "sha256:fe2f76d6544740a8f539033dc5f60d2c8c098bfbb9c2e086c8ac176f6ecb9cba",
-    "nonlinearity": "sha256:dd75c38531ac16e9111514685e9d882e8f357d12369dd0d50ce3ff5a83fe3401",
-    "stimulus": "sha256:dcf627ac68713a34f341b5e557c2b30ec411d754f5f2bd2fdd1ab23444516ffb",
-    "termination": {"max_steps": 16, "recognition_threshold": 0.75}
+    "candidate_attractors": "sha256:884e270a447eb9afa10f14f1ef538e94b75609fc558a7080ee307ad28a544862",
+    "initial_field": "sha256:e0e19d77bc9af6f291d32fa6296810f8ba44e74d707146a77f7d38c6378a6327",
+    "initial_electronic_state": "sha256:1799265e017f9c6afd9a59f5215fdfef5e553c748505478bbc84c01179793c8a",
+    "field_topology": "sha256:ef86efc650668a2c32ce8069a09b2694051a8c6cf9a92164930153b28751e801",
+    "local_topology": "sha256:cae2c63f195362524a0f07b790fd28d062ca7bd0303750cebb5ef76221fa2432",
+    "nonlinearity": "sha256:f302b88f152caf0adb7b8ed055dc3fd0f03dff078eecde3e7fcdf70052640054",
+    "stimulus": "sha256:bab75ae47b143e5945e33bf54367d8891e1c60fcf11abd9ff867de5405afa930",
+    "termination": {
+      "max_steps": 16,
+      "recognition_threshold": 0.75
+    }
   },
-  "intervention_count": 3,
+  "intervention_count": 1,
   "coordination_message_count": 4
 }
