@@ -1,0 +1,32 @@
+{
+  "schema_version": "tranchNOSE.experiment-001a.receipt.v0.1",
+  "experiment": "001A",
+  "implementation": "synthetic-harness-py-v0.1",
+  "randomness": {
+    "algorithm": "sha256-counter-v1",
+    "streams": [
+      {"name": "interventions", "seed": "001a-interventions-seed"},
+      {"name": "coordination", "seed": "001a-coordination-seed"}
+    ]
+  },
+  "condition": {
+    "label": "A",
+    "field_recurrence": true,
+    "electronic_reconstruction": false,
+    "permitted_coordination_classes": ["clock_reference", "health_telemetry"],
+    "coordination_ceiling_bits": 4096
+  },
+  "inputs": {
+    "target": "F_A",
+    "candidate_attractors": "sha256:2e5f6a9104d0b3e4f1164f18cc3e0f6fb195214388238229ffe78d4abb751c43",
+    "initial_field": "sha256:6e8e078320f1817bf1a0c43c8461e58d886f0cfcc1615c94e9457921f7c3466f",
+    "initial_electronic_state": "sha256:d6e5adcbf30ad005be6323dc9f90b70a49e81df22cb53f4a0f11518bb7989607",
+    "field_topology": "sha256:b018862987ac39a773c0d7043734da322b92d8d975010f150475fe53b80ec82a",
+    "local_topology": "sha256:fe2f76d6544740a8f539033dc5f60d2c8c098bfbb9c2e086c8ac176f6ecb9cba",
+    "nonlinearity": "sha256:dd75c38531ac16e9111514685e9d882e8f357d12369dd0d50ce3ff5a83fe3401",
+    "stimulus": "sha256:dcf627ac68713a34f341b5e557c2b30ec411d754f5f2bd2fdd1ab23444516ffb",
+    "termination": {"max_steps": 16, "recognition_threshold": 0.75}
+  },
+  "intervention_count": 3,
+  "coordination_message_count": 4
+}
