@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,13 @@ TRANSCRIPT_DOMAIN = b"TranchNOSE-001A-G-local-v1|"
 STREAM_DOMAIN = b"TranchNOSE-001A-PRNG-v1|"
 ROOT = Path(__file__).resolve().parent
 SCHEMA_PATH = ROOT / "receipt.schema.json"
+
+DYNAMICS_SPEC = importlib.util.spec_from_file_location(
+    "exp001a_dynamics", ROOT / "dynamics.py"
+)
+assert DYNAMICS_SPEC and DYNAMICS_SPEC.loader
+dynamics = importlib.util.module_from_spec(DYNAMICS_SPEC)
+DYNAMICS_SPEC.loader.exec_module(dynamics)
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -67,40 +75,54 @@ def named_streams(manifest: dict[str, Any]) -> dict[str, NamedStream]:
         raise ValueError("PRNG stream names must be unique")
     required = {"interventions", "coordination"}
     if set(names) != required:
-        raise ValueError(f"synthetic harness requires exactly these streams: {sorted(required)}")
+        raise ValueError(
+            f"001A harness requires exactly these streams: {sorted(required)}"
+        )
     return {s["name"]: NamedStream(s["name"], s["seed"]) for s in streams}
 
 
-def build_interventions(manifest: dict[str, Any], stream: NamedStream) -> list[dict[str, Any]]:
+def build_interventions(
+    manifest: dict[str, Any], stream: NamedStream
+) -> list[dict[str, Any]]:
     types = ["phase_corrupt", "node_remove", "noise_inject"]
     count = manifest["intervention_count"]
     max_steps = manifest["inputs"]["termination"]["max_steps"]
     out = []
     for order in range(count):
-        out.append({
-            "step": 1 + (stream.uint32() % max(1, max_steps - 1)),
-            "order": order,
-            "type": stream.choice(types),
-            "parameters": {"magnitude_ppm": stream.uint32() % 1001},
-        })
+        out.append(
+            {
+                "step": 1 + (stream.uint32() % max(1, max_steps - 1)),
+                "order": order,
+                "type": stream.choice(types),
+                "parameters": {"magnitude_ppm": stream.uint32() % 1001},
+            }
+        )
     return sorted(out, key=lambda item: (item["step"], item["order"]))
 
 
-def build_transcript(manifest: dict[str, Any], stream: NamedStream) -> list[dict[str, Any]]:
+def build_transcript(
+    manifest: dict[str, Any], stream: NamedStream
+) -> list[dict[str, Any]]:
     permitted = manifest["condition"]["permitted_coordination_classes"]
     if not permitted and manifest["coordination_message_count"]:
-        raise ValueError("cannot emit coordination messages when no classes are permitted")
+        raise ValueError(
+            "cannot emit coordination messages when no classes are permitted"
+        )
     transcript = []
     for seq in range(manifest["coordination_message_count"]):
-        transcript.append({
-            "seq": seq,
-            "class": stream.choice(permitted),
-            "payload_u32": stream.uint32(),
-        })
+        transcript.append(
+            {
+                "seq": seq,
+                "class": stream.choice(permitted),
+                "payload_u32": stream.uint32(),
+            }
+        )
     return transcript
 
 
-def run_identity_input(manifest: dict[str, Any], interventions: list[dict[str, Any]]) -> dict[str, Any]:
+def run_identity_input(
+    manifest: dict[str, Any], interventions: list[dict[str, Any]]
+) -> dict[str, Any]:
     return {
         "schema_version": manifest["schema_version"],
         "experiment": manifest["experiment"],
@@ -109,17 +131,69 @@ def run_identity_input(manifest: dict[str, Any], interventions: list[dict[str, A
         "randomness": manifest["randomness"],
         "inputs": manifest["inputs"],
         "interventions": interventions,
-        "synthetic_harness": {"coordination_message_count": manifest["coordination_message_count"]},
+        # Kept under the frozen v0.1 identity key even though dynamics are now real.
+        "synthetic_harness": {
+            "coordination_message_count": manifest["coordination_message_count"]
+        },
+    }
+
+
+def classify_failure(
+    manifest: dict[str, Any],
+    result: dict[str, Any],
+    coordination_bits: int,
+) -> dict[str, Any] | None:
+    max_steps = manifest["inputs"]["termination"]["max_steps"]
+    if coordination_bits > manifest["condition"]["coordination_ceiling_bits"]:
+        return {
+            "class": "coordination_budget_exceeded",
+            "terminal_step": max_steps,
+            "evidence": {
+                "total_bits": coordination_bits,
+                "ceiling_bits": manifest["condition"]["coordination_ceiling_bits"],
+            },
+        }
+    if result["converged"]:
+        return None
+    if not manifest["condition"]["field_recurrence"]:
+        return {
+            "class": "insufficient_recurrence",
+            "terminal_step": max_steps,
+            "evidence": {
+                "final_target_overlap": result["final_overlap"][
+                    manifest["inputs"]["target"]
+                ],
+                "winning_basin": result["winning_basin"],
+            },
+        }
+    return {
+        "class": "did_not_converge_unresolved",
+        "terminal_step": max_steps,
+        "evidence": {
+            "final_target_overlap": result["final_overlap"][
+                manifest["inputs"]["target"]
+            ],
+            "winning_basin": result["winning_basin"],
+        },
     }
 
 
 def build_receipt(manifest: dict[str, Any]) -> dict[str, Any]:
+    dynamics.validate_condition(manifest["condition"])
+    dynamics.verify_manifest_inputs(manifest, canonical_bytes)
+
     streams = named_streams(manifest)
     interventions = build_interventions(manifest, streams["interventions"])
     transcript = build_transcript(manifest, streams["coordination"])
     transcript_digest = digest(TRANSCRIPT_DOMAIN, transcript)
     total_bits = sum(len(canonical_bytes(message)) * 8 for message in transcript)
     run_id = digest(RUN_DOMAIN, run_identity_input(manifest, interventions))
+
+    # G_local is audited above but is deliberately not an input to simulate().
+    # This prevents the administrative transcript from becoming a hidden
+    # reconstruction path in the first real field-dynamics slice.
+    result = dynamics.simulate(manifest, interventions)
+    state_digests = dynamics.state_digests(result, canonical_bytes)
 
     receipt: dict[str, Any] = {
         "identity": {
@@ -134,29 +208,41 @@ def build_receipt(manifest: dict[str, Any]) -> dict[str, Any]:
         "inputs": copy.deepcopy(manifest["inputs"]),
         "interventions": interventions,
         "observations": {
-            "final_overlap": {"F_A": 1.0, "F_B": 0.0, "F_C": 0.0, "F_D": 0.0},
-            "winning_basin": "F_A",
-            "converged": True,
-            "convergence_step": manifest["inputs"]["termination"]["max_steps"],
-            "attractor_lifetime_steps": 1,
-            "final_field_digest": digest(b"TranchNOSE-001A-Synthetic-Field-v1|", {"run_id": run_id}),
-            "final_electronic_state_digest": digest(b"TranchNOSE-001A-Synthetic-Electronic-v1|", {"run_id": run_id}),
-            "final_topology_digest": digest(b"TranchNOSE-001A-Synthetic-Topology-v1|", manifest["inputs"]["field_topology"]),
+            "final_overlap": result["final_overlap"],
+            "winning_basin": result["winning_basin"],
+            "converged": result["converged"],
+            "convergence_step": result["convergence_step"],
+            "attractor_lifetime_steps": result["attractor_lifetime_steps"],
+            **state_digests,
         },
         "coordination_audit": {
             "transcript_digest": transcript_digest,
             "message_count": len(transcript),
             "total_bits": total_bits,
-            "ceiling_compliant": total_bits <= manifest["condition"]["coordination_ceiling_bits"],
-            "leakage_decoder": {"evaluated": False, "accuracy": None, "confidence": None},
+            "ceiling_compliant": (
+                total_bits <= manifest["condition"]["coordination_ceiling_bits"]
+            ),
+            "leakage_decoder": {
+                "evaluated": False,
+                "accuracy": None,
+                "confidence": None,
+            },
             "causal_trace_controls": [],
         },
         "causal_attribution": {
-            "ablation_matrix": {"A": None, "B": None, "C": None, "D": None, "delta_field": None, "delta_electronic": None, "interaction": None},
+            "ablation_matrix": {
+                "A": None,
+                "B": None,
+                "C": None,
+                "D": None,
+                "delta_field": None,
+                "delta_electronic": None,
+                "interaction": None,
+            },
             "state_swap_controls": [],
             "attribution": "unresolved",
         },
-        "failure": None,
+        "failure": classify_failure(manifest, result, total_bits),
     }
 
     digest_input = copy.deepcopy(receipt)
@@ -174,10 +260,14 @@ def replay(manifest: dict[str, Any], expected: dict[str, Any]) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="TranchNOSE Experiment 001A synthetic receipt harness")
+    parser = argparse.ArgumentParser(
+        description="TranchNOSE Experiment 001A deterministic field-dynamics harness"
+    )
     parser.add_argument("manifest", type=Path)
     parser.add_argument("--write", type=Path, help="write the canonical receipt JSON")
-    parser.add_argument("--replay", type=Path, help="assert exact replay against an existing receipt")
+    parser.add_argument(
+        "--replay", type=Path, help="assert exact replay against an existing receipt"
+    )
     args = parser.parse_args()
 
     manifest = load_json(args.manifest)
