@@ -1,4 +1,4 @@
-name: Robotics R001 body-state crucible
+name: Robotics relational-state crucibles
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  r001:
+  robotics:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,3 +20,4 @@ jobs:
           python-version: "3.12"
       - run: python -m unittest discover -s experiments/robotics -p "test_*.py" -v
       - run: python experiments/robotics/r001_body_state.py
+      - run: python experiments/robotics/r002_address_answer.py
