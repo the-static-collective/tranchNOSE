@@ -1,6 +1,8 @@
 # TranchNOSE
 
-**TranchNode Optical State Experiments**
+**Physical Relational State Experiments**
+
+Optics was the first carrier. It is not assumed to be the last.
 
 TranchNOSE is an experimental repository for testing whether mutable physical relation/topology can itself carry reconstructible computational state.
 
@@ -33,6 +35,33 @@ State(M) \neq X
 \]
 
 That is, the complete computational state of the machine may not be recoverable from electronic memory alone.
+
+## Experimental surfaces
+
+### Optical field state
+
+The original TranchNOSE surface tests whether mutable optical relation/topology can carry reconstructible state. Experiment 001/001A remains unchanged and owns its existing receipt and no-cheating contracts.
+
+### Robotics / embodied state
+
+The robotics surface tests the same broad relational-state question against a physically different class of systems:
+
+> Can causally relevant machine state live partly in body, morphology, contact, topology, environment coupling, or their relation rather than in controller memory alone?
+
+The first software crucible is **R001 — Body State**. It holds controller and challenge constant while changing only declared body parameters, then records whether the trajectory changes. This is a protocol test before hardware, not physical proof.
+
+See [ROBOTICS_CHARTER.md](./ROBOTICS_CHARTER.md) and [experiments/robotics/r001_body_state.py](./experiments/robotics/r001_body_state.py).
+
+Shared engineering distinctions include:
+
+```text
+controller != body
+capability != authority
+observation != intervention
+prediction != causal sufficiency
+name != particular
+state similarity != history identity
+```
 
 ## First primitive: a field object
 
