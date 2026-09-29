@@ -44,9 +44,41 @@ R002 registers four deterministic external challenges and records an answer set 
 
 See [R002_ADDRESS_ANSWER.md](./R002_ADDRESS_ANSWER.md).
 
+## R003 — Counterfactual State / Morphology / History Swaps
+
+Question:
+
+> When controller, body, topology, observable state, latent embodied state, and history provenance are separately addressable, which imported component actually changes the next response?
+
+Run:
+
+```bash
+python experiments/robotics/r003_counterfactual_swaps.py
+python -m unittest discover -s experiments/robotics -p "test_*.py" -v
+```
+
+R003 constructs one-component counterfactual swaps. Controller, body, topology, and latent-state swaps are causally active in the model. A provenance-only history swap is recorded in the receipt but deliberately excluded from the dynamics and therefore must not alter the response.
+
+The key negative control is:
+
+```text
+same operative state
++ different history receipt
+-> same response
+```
+
+while:
+
+```text
+same visible snapshot
++ different latent embodied state
+-> potentially different future
+```
+
+See [R003_COUNTERFACTUAL_SWAPS.md](./R003_COUNTERFACTUAL_SWAPS.md).
+
 ## Planned sequence
 
-- **R003 — Morphology / State Swaps:** controller/body/topology/history counterfactuals.
 - **R004 — Bounded Relational Learning:** proposal-only topology adaptation with a separate authority crossing.
 
-Do not skip forward by silently adding adaptive self-modification to R001 or R002.
+Do not skip forward by silently adding adaptive self-modification to R001, R002, or R003.
