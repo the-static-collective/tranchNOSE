@@ -63,6 +63,12 @@ name != particular
 state similarity != history identity
 ```
 
+## Play / incubation surface
+
+Not every executable intuition is a promoted experiment. The [play experiments](./experiments/play/) hold small falsifiable probes that may fail, mutate, or remain local.
+
+The first is **DIFFERENCE-001 — Relational Witness**, an exact two-view geometry where neither registered witness alone uniquely determines depth but their disparity relation does.
+
 ## First primitive: a field object
 
 A **field object** `F` is a distributed optical state whose identity is expressed through recurrent participation in the shared field rather than by an authoritative copy held at one node.
