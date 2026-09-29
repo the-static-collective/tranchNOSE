@@ -27,10 +27,26 @@ Acceptance for this slice:
 
 A positive R001 result demonstrates only that embodiment is causally relevant **inside the declared model**. It does not establish relational memory in hardware.
 
+## R002 — Address / Answer
+
+Question:
+
+> Can machines with the same controller and initial observable state be distinguished by their characteristic responses to a fixed challenge set?
+
+Run:
+
+```bash
+python experiments/robotics/r002_address_answer.py
+python -m unittest discover -s experiments/robotics -p "test_*.py" -v
+```
+
+R002 registers four deterministic external challenges and records an answer set made of response trajectories and derived features. Human-readable body names are explicitly non-causal metadata: renaming an unchanged body must not change its physical-particular reference or answer-set digest.
+
+See [R002_ADDRESS_ANSWER.md](./R002_ADDRESS_ANSWER.md).
+
 ## Planned sequence
 
-- **R002 — Address / Answer:** characteristic challenge-response identity.
 - **R003 — Morphology / State Swaps:** controller/body/topology/history counterfactuals.
 - **R004 — Bounded Relational Learning:** proposal-only topology adaptation with a separate authority crossing.
 
-Do not skip forward by silently adding adaptive self-modification to R001.
+Do not skip forward by silently adding adaptive self-modification to R001 or R002.
