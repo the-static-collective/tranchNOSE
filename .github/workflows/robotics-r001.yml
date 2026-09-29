@@ -1,0 +1,22 @@
+name: Robotics R001 body-state crucible
+
+on:
+  pull_request:
+    paths:
+      - "experiments/robotics/**"
+      - "ROBOTICS_CHARTER.md"
+      - ".github/workflows/robotics-r001.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  r001:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m unittest discover -s experiments/robotics -p "test_*.py" -v
+      - run: python experiments/robotics/r001_body_state.py
