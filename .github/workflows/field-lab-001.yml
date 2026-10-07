@@ -1,0 +1,25 @@
+name: FIELD LAB 001
+
+on:
+  push:
+    paths:
+      - "FIELD_LAB_001.md"
+      - "experiments/field_lab/**"
+      - "experiments/robotics/r001_body_state.py"
+      - "integrations/ghot/**"
+      - ".github/workflows/field-lab-001.yml"
+  pull_request:
+    paths:
+      - "FIELD_LAB_001.md"
+      - "experiments/field_lab/**"
+      - "experiments/robotics/r001_body_state.py"
+      - "integrations/ghot/**"
+      - ".github/workflows/field-lab-001.yml"
+
+jobs:
+  field-lab-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: FIELD LAB tests
+        run: python3 -m unittest experiments.field_lab.test_field_lab -v
