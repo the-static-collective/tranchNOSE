@@ -16,10 +16,16 @@ on:
       - "integrations/ghot/**"
       - ".github/workflows/field-lab-001.yml"
 
+permissions:
+  contents: read
+
 jobs:
   field-lab-contract:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: FIELD LAB tests
-        run: python3 -m unittest experiments.field_lab.test_field_lab -v
+        run: python -m unittest experiments.field_lab.test_field_lab -v
